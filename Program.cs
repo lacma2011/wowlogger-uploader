@@ -1,18 +1,33 @@
 ﻿using System;
 using System.IO;
+using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
 using MoonSharp.Interpreter;
+using System.Configuration;
 
 namespace fish
 {    class Program
     {
-        private const string apiEndpoint = "http://your_wow_fishmongerer_setup.com/submit";
-
+        static string apiUrl = "";
+        public string ApiUrl
+        {
+            get
+            {
+                return apiUrl;
+            }
+            set
+            {
+                apiUrl = value;
+            }
+        }
         static void Main(string[] args)
         {
+            // load the configuration
+            SetConfig();
+
             String fileName = args[0];
             FileStream fileStream = new FileStream(fileName, FileMode.Open);
             using (StreamReader reader = new StreamReader(fileStream))
@@ -28,22 +43,25 @@ namespace fish
                 } else {
                     // Assume LUA
 
-                    obj = Program.convertLua(text);
+                    obj = ConvertLua(text);
                 }
 
                 // send to API
                 if (false)
                 {
-                    Program.send(obj);
+                    Send(obj);
                 } else {
-                    Program.sendCurl("12334Auth", "dev-id-1", obj);
+                    SendCurl("12334Auth", "dev-id-1", obj);
                 }
             }
 
-
         }
 
-        private static JToken convertLua(string strInput)
+        static private void SetConfig()
+        {
+            apiUrl = ConfigurationManager.AppSettings["url"];
+        }
+        private static JToken ConvertLua(string strInput)
         {
             string script = strInput + "\n  "  + " return FishLogData";
             DynValue res = Script.RunString(script);
@@ -86,22 +104,22 @@ namespace fish
             }
         }
 
-        private static void send(JToken jsonObject)
+        private static void Send(JToken jsonObject)
         {
             HttpClient client = new HttpClient();
             var content = new StringContent(jsonObject.ToString(), Encoding.UTF8, "application/json");
-            var result = client.PostAsync(apiEndpoint, content).Result;
+            var result = client.PostAsync(apiUrl, content).Result;
             Console.Write(result);
         }
 
-        private static void sendCurl(string auth, string developerId, JToken jsonObject)
+        private static void SendCurl(string auth, string developerId, JToken jsonObject)
         {
             var content = new StringContent(jsonObject.ToString(), Encoding.UTF8, "application/json");
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("Authorization", auth);
                 client.DefaultRequestHeaders.Add("Developer-Id", developerId);
-                var result = client.PostAsync(apiEndpoint, content).Result;
+                var result = client.PostAsync(apiUrl, content).Result;
                 string resultContent = result.Content.ReadAsStringAsync().Result;
                 Console.Write(resultContent);
             }
