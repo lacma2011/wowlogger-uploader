@@ -9,6 +9,8 @@ using MoonSharp.Interpreter;
 namespace fish
 {    class Program
     {
+        private const string apiEndpoint = "http://your_wow_fishmongerer_setup.com/submit";
+
         static void Main(string[] args)
         {
             String fileName = args[0];
@@ -86,10 +88,9 @@ namespace fish
 
         private static void send(JToken jsonObject)
         {
-            string url = "http://beta2.runwaypassport.com/api/hello";
             HttpClient client = new HttpClient();
             var content = new StringContent(jsonObject.ToString(), Encoding.UTF8, "application/json");
-            var result = client.PostAsync(url, content).Result;
+            var result = client.PostAsync(apiEndpoint, content).Result;
             Console.Write(result);
         }
 
@@ -100,7 +101,7 @@ namespace fish
             {
                 client.DefaultRequestHeaders.Add("Authorization", auth);
                 client.DefaultRequestHeaders.Add("Developer-Id", developerId);
-                var result = client.PostAsync("http://beta2.runwaypassport.com/api/hello", content).Result;
+                var result = client.PostAsync(apiEndpoint, content).Result;
                 string resultContent = result.Content.ReadAsStringAsync().Result;
                 Console.Write(resultContent);
             }
